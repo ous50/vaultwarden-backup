@@ -4,6 +4,7 @@ PATH=/sbin:/usr/sbin/:/usr/local/sbin:/bin:/usr/local/bin
 #This script requires gnupg and rsync installed.
 
 #Set variables
+binDir=$PWD
 presentHour=$(date '+%H')
 parentDirectory= #The parent directory of the targetDirectory
 backupDirectory=#bw-bkp
@@ -13,18 +14,21 @@ daysLocalBackupKeep=1
 gpgPublicKeyID=#Such as CF580D011CA40D45 or me@ous50.moe
 language=$(locale | grep LANG | cut -d "=" -f 2 | cut -d "." -f 1)
 
+#Set to parent directory, to simplify the tar structure. Then get the latest backup sum.
+cd $parentDirectory
+lastAvailableBackupSum=$(cat .lABS)
+
+#Compare backups with the previous ones, skip the process if the two are the same.
+presentBackupSum=$(find $targetDirectory -type f -exec md5sum {} \; | sort -k 2 | md5sum | cut -d " " -f 1 ) 
+#rm bw-bkp-$presentHour.tar.gz
+
 # Translations
-source translations.sh
+source $binDir/translations.sh
 
 # Tell when the script is executed
 echo $presentTime
 
-#Set home directory, to simplify the tar structure. Then get the latest backup sum.
-cd $parentDirectory
-lastAvailableBackupSum=$(cat .lABS | cut -d " " -f 1 )
-
-#Compare backups with the previous ones, skip the process if the two are the same.
-presentBackupSum=$(tar -czvf bw-bkp-$presentHour.tar.gz $targetDirectory | sha256sum | cut -d " " -f 1 )
+# Skip backup process if the data directory is not changed
 if [[ $lastAvailableBackupSum == $presentBackupSum ]];
 then
   echo $duplicatedBackup

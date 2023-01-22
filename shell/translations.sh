@@ -32,7 +32,7 @@ case $language in
     end="備份進程結束。"
     ;;
   zh_CN)
-    presentTime="现在是 $(date)。"
+    presentTime=
     duplicatedBackup="备份数据与最新的备份相同，退出备份进程。"
     diffrentBackup="备份数据（"$presentBackupSum"）与最新的备份（"$lastAvailableBackupSum"）不同，继续备份进程。"
     packingCompleted="打包 $targetDirectory 完成"
@@ -40,7 +40,7 @@ case $language in
     end="备份进程结束。"
     ;;
   *) # English as default
-    presentTime="It's $(date) now."
+    presentTime="Backup started at $(date)."
     duplicatedBackup="The present data is duplicated with the latest backups, exit the backup process."
     diffrentBackup="The present data ("$presentBackupSum") is diffrent from the latest backups("$lastAvailableBackupSum"), continue the backup process."
     packingCompleted="Pack up $targetDirectory completed"
