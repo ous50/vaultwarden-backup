@@ -1,4 +1,12 @@
 case $language in
+  fr_FR|fr_BE|fr_CA|fr_CH|fr_LU|fr_MC)
+    presentTime="Il est $(date)."
+    duplicatedBackup="Les données de sauvegarde sont les mêmes que la dernière sauvegarde, le processus de sauvegarde est terminé."
+    diffrentBackup="Les données de sauvegarde（"$presentBackupSum"）sont différentes que la dernière sauvegarde（"$lastAvailableBackupSum"），le processus de sauvegarde est continué."
+    packingCompleted="Le paquetage de $targetDirectory est terminé"
+    dailyDeleteCompleted="La sauvegarde de $(date -d -${daysLocalBackupKeep}day '+%F') a été supprimée."
+    end="Le processus de sauvegarde est terminé."
+    ;;
   yue_HK)
     presentTime="而家係 $(date)。"
     duplicatedBackup="備份數據同最新嘅備份一樣，退出備份進程。"
@@ -7,7 +15,7 @@ case $language in
     dailyDeleteCompleted="刪除咗 $(date -d -${daysLocalBackupKeep}day '+%F') 嘅備份。"
     end="備份進程結束。"
     ;;
-  es_ES)
+  es_ES|es_AR|es_BO|es_CL|es_CO|es_CR|es_CU|es_DO|es_EC|es_GT|es_HN|es_MX|es_NI|es_PA|es_PE|es_PR|es_PY|es_SV|es_US|es_UY|es_VE)
     presentTime="Ahora es $(date)."
     duplicatedBackup="Los datos de copia de seguridad son iguales que la última copia de seguridad, se termina el proceso de copia de seguridad."
     diffrentBackup="Los datos de copia de seguridad（"$presentBackupSum"）son diferentes que la última copia de seguridad（"$lastAvailableBackupSum"），se continua el proceso de copia de seguridad."
@@ -31,8 +39,8 @@ case $language in
     dailyDeleteCompleted="已刪除 $(date -d -${daysLocalBackupKeep}day '+%F') 的備份。"
     end="備份進程結束。"
     ;;
-  zh_CN)
-    presentTime=
+  zh_CN|zh_SG)
+    presentTime="现在是 $(date)。"
     duplicatedBackup="备份数据与最新的备份相同，退出备份进程。"
     diffrentBackup="备份数据（"$presentBackupSum"）与最新的备份（"$lastAvailableBackupSum"）不同，继续备份进程。"
     packingCompleted="打包 $targetDirectory 完成"

@@ -1,46 +1,49 @@
 import os;
 import requests;
 import time;
+import subprocess;
 # import re;
 
 # Define Variables
 # Your backup directory
-backupDir = 'bw-bkp';
+backupDir = "bw-bkp";
 # Your data directory
-targetDir = 'bw-data';
+targetDir = "bw-data";
 # Your parent directory
-parentDirectory = '/home/username/';
+parentDirectory = "/home/ous50/";
 presentHour = int(time.strftime("%H", time.localtime())) ;
 # Your backup file name
 fileName = "bw-bkp-" + time.strftime("%Y%m%d-%H%M%S", time.localtime()) + ".tar.gpg";
 #How many days to keep local backup
 daysLocalBackupKeep=1;
 gpgPublicKeyID='CF580D011CA40D45'; #For gpg encryption Such as CF580D011CA40D45 or me@ous50.moe
-date = int(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime())) ;
+date = time.strftime("%a %b %d %H:%M:%S %Y", time.localtime()) ;
+# Rsync folder
+rsyncFolder = "";
 
-# Define print outs
-presentTime="Backup started at" + date + ".";
-duplicatedBackup="The present data is duplicated with the latest backups, exit the backup process.";
-diffrentBackup="The present data (" + presentBackupSum + ") is diffrent from the latest backups(" + lastAvailableBackupSum + "), continue the backup process.";
-packingCompleted="Pack up " + targetDirectory + "completed";
-dailyDeleteCompleted="Backups in the day " + int(time.strftime("%d", time.localtime())) - 1 + " deleted.";
-end="End of backup process.";
-gpgNotInstalledError="GPG is not installed, please install it first.";
-
-# Get last backup sum
-if os.path.exists('.lABS'):
-    lastAvailableBackupSum = os.system('cat .lABS | cut -d " " -f 1');
-else:
-    lastBackupSum = '';
-
-# Get present backup sum
-presentBackupSum = os.system('find $targetDirectory -type f -exec md5sum {} \; | sort -k 2 | md5sum | cut -d " " -f 1');
 
 # Tell when the script is executed
-print(presentTime);
+taskTime="Backup started at " + date + ".";
+print(taskTime);
 
 # Switch working directory
 os.chdir(parentDirectory);
+
+# Get last backup sum
+if os.path.exists('.lABS'):
+    print("Found last available backup data.")
+    lastAvailableBackupSum = subprocess.run(args=['cat', '.lABS'], stdout=subprocess.PIPE).stdout.decode('utf-8').split(' ')[0];
+    # os.system('cat .lABS | cut -d " " -f 1');
+else:
+    print("Last available backup data not found.")
+    lastAvailableBackupSum = "";
+    
+print("Last avaliable backup checksum: " + lastAvailableBackupSum + "." )
+
+# Get present backup sum
+presentBackupSum = str(subprocess.run(args=['find', targetDir, ' -type f ', '-exec', 'md5sum', '{}', '\;'], stdout=subprocess.PIPE).stdout.decode('utf-8').split(' ')[0]);
+print("Present data checksum: " + presentBackupSum + ".")
+
 
 # Create the backup/target directory if either of them doesn't exist
 if not os.path.exists(backupDir):
@@ -52,8 +55,18 @@ if not os.path.exists(targetDir):
 # Get the current locale
 locale = os.environ['LANG'];
 if locale == None:
-    locale = 'en_US.UTF-8';
+    lang = 'en_US';
 lang = locale.split('.')[0];
+
+
+
+duplicatedBackup="The present data is duplicated with the latest backups, exit the backup process.";
+diffrentBackup="The present data (" + presentBackupSum + ") is diffrent from the latest backups(" + lastAvailableBackupSum + "), continue the backup process.";
+packingCompleted="Pack up " + targetDir + "completed";
+dailyDeleteCompleted="Backups in the day " + str(int(time.strftime("%d", time.localtime())) - 1) + " deleted.";
+end="End of backup process.";
+gpgNotInstalledError="GPG is not installed, please install it first.";
+
 
 # Check if the present backup is duplicated with the latest backup
 if presentBackupSum == lastAvailableBackupSum:
@@ -71,7 +84,8 @@ else:
 
     #For cases gnupg is not installed
     try:
-        os.system("gpgtar -e -r $gpgPublicKeyID $targetDirectory > $backupDirectory/$fileName");
+        subprocess.run(args=['gpgtar', '-e', '-r', gpgPublicKeyID, targetDir, '>', backupDir + '/' + fileName], stdout=subprocess.PIPE).stdout.decode('utf-8');
+        #os.system("gpgtar -e -r" + gpgPublicKeyID + "" + targetDir > backupDir + "/" + fileName);
     except OSError:
         print(gpgNotInstalledError);
         exit();
@@ -80,11 +94,12 @@ else:
 
 
     # Rsync to remote server
-    os.system('rsync -av --partial ' + backupDirectory)
+    subprocess.run(args=['rsync', '-av', '--partial', backupDir, rsyncFolder], stdout=subprocess.PIPE).stdout.decode('utf-8');
+    # os.system('rsync -av --partial ' + backupDir)
 
     # Delete backups in the day set in daysLocalBackupKeep
     if presentHour == 0:
-        os.system('find ' + backupDirectory + ' -mtime +' + daysLocalBackupKeep + ' -delete');
+        os.system('find ' + backupDir + ' -mtime +' + daysLocalBackupKeep + ' -delete');
         print(dailyDeleteCompleted);
     
     print(end);
