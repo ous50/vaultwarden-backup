@@ -32,6 +32,12 @@ echo $presentTime
 if [[ $lastAvailableBackupSum == $presentBackupSum ]];
 then
   echo $duplicatedBackup
+
+  #Remove last day's local backups on 12AM
+  if [ $presentHour -eq 0 ];
+  then
+	  rm $backupDirectory/bw-bkp-$(date -d -${daysLocalBackupKeep}day '+%F')* | echo $dailyDeleteCompleted
+  fi
   exit
 else
   echo $diffrentBackup
