@@ -9,17 +9,18 @@ import subprocess;
 backupDir = "bw-bkp";
 # Your data directory
 targetDir = "bw-data";
+# Rsync folder
+rsyncFolder = "";
 # Your parent directory
 parentDirectory = "/home/ous50/";
 presentHour = int(time.strftime("%H", time.localtime())) ;
 # Your backup file name
-fileName = "bw-bkp-" + time.strftime("%Y%m%d-%H%M%S", time.localtime()) + ".tar.gpg";
+fileName = "bw-bkp-" + time.strftime("%Y-%m-%d_%H%M%S", time.localtime()) + ".tar.gpg";
 #How many days to keep local backup
 daysLocalBackupKeep=1;
 gpgPublicKeyID='CF580D011CA40D45'; #For gpg encryption Such as CF580D011CA40D45 or me@ous50.moe
 date = time.strftime("%a %b %d %H:%M:%S %Y", time.localtime()) ;
-# Rsync folder
-rsyncFolder = "";
+
 
 
 # Tell when the script is executed
@@ -86,16 +87,27 @@ else:
     try:
         subprocess.run(args=['gpgtar', '-e', '-r', gpgPublicKeyID, targetDir, '>', backupDir + '/' + fileName], stdout=subprocess.PIPE).stdout.decode('utf-8');
         #os.system("gpgtar -e -r" + gpgPublicKeyID + "" + targetDir > backupDir + "/" + fileName);
-    except OSError:
-        print(gpgNotInstalledError);
+    except subprocess.CalledProcessError:
+        print(subprocess.CalledProcessError.with_traceback(self, tb));
         exit();
 
     print(packingCompleted);
 
+    # Upload the backups to tmp.link
+    files = {'file': open(parentDirectory + backupDir + '/' + fileName, 'rb')}
+        ## Extract from the tmp.link website
+    form_data = {
+        'token': '',
+        'model': '99',
+        'mrid': ''}; 
+    tmp_link_upload = requests.post('https://connect.tmp.link/api_v2/cli_uploader', files=files, data=form_data);
+    print(tmp_link_upload.text);
+
 
     # Rsync to remote server
-    subprocess.run(args=['rsync', '-av', '--partial', backupDir, rsyncFolder], stdout=subprocess.PIPE).stdout.decode('utf-8');
-    # os.system('rsync -av --partial ' + backupDir)
+    rsync_run = subprocess.run(args=['rsync', '-av', '--partial', backupDir, rsyncFolder], stdout=subprocess.PIPE).stdout.decode('utf-8');
+    print(rsync_run);
+    
 
     # Delete backups in the day set in daysLocalBackupKeep
     if presentHour == 0:
